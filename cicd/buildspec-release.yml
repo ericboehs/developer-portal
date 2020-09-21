@@ -1,0 +1,47 @@
+# This release file uses the new git hub cli tool called gh to automate release and artifact uploade.
+# Learn more here; https://github.com/cli/cli
+version: 0.2
+env:
+  variables:
+    ENVS: "dev staging production"
+    S3_ARCHIVE_BUCKET: "developer-portal-builds-s3-upload"
+  parameter-store:
+    GITHUB_TOKEN: "/dvp/devops/va_bot_github_token"
+    SLACK_WEBHOOK: "/dvp/devops/codebuild_slack_webhook"
+phases:
+  pre_build:
+    commands:
+      - gh config set prompt disabled
+      - gh config set git_protocol ssh
+      - COMMIT_HASH=${CODEBUILD_RESOLVED_SOURCE_VERSION}
+      - echo "Generating release for ${COMMIT_HASH}" 
+  build:
+    commands:
+      - mkdir -p release
+      - aws s3 sync --no-progress s3://${S3_ARCHIVE_BUCKET}/cb-${COMMIT_HASH} release/.
+      # Check that all files exist 
+      - | 
+        for env in ${ENVS}; do
+          if [[ ! -f release/${env}.tar.bz2 ]]; then
+            echo "${env}.tar.bz2 was not found. Aborting release process and sending notification to slack " >&2
+            exit 1
+          fi
+        done
+      # Create new tag
+      - OLD_TAG=$(git tag --sort=-creatordate | grep cb- | head -1)
+      - echo "Found ${OLD_TAG} - incrementing..."
+      - NEW_TAG=$(increment.sh ${OLD_TAG}) 
+      - echo "Creating ${NEW_TAG} release"
+      - gh release create ${NEW_TAG}
+      - echo "Uploading artifacts"
+      - |
+        for env in ${ENVS}; do
+          gh release upload ${NEW_TAG} "release/${env}.tar.bz2#${env}"
+          echo "${env} artifact uploaded"
+        done
+  post_build:
+    commands:
+      # Post to Slack if failure.
+      if [[ CODEBUILD_BUILD_SUCCEEDING -eq 0 ]]; then
+        slackpost.sh "There was an error with the release process for ${CODEBUILD_BUILD_ID}."
+      fi
