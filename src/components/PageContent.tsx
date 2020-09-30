@@ -2,26 +2,36 @@ import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { SiteRoutes } from '../Routes';
 
-export default class PageContent extends React.Component<RouteComponentProps, {}> {
-  private mainRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>();
+const PageContent = (props: RouteComponentProps): JSX.Element => {
+  const mainRef = React.useRef<HTMLElement>(null);
+  const prevLocationRef = React.useRef<string | null>(null);
 
-  public componentDidUpdate(prevProps: RouteComponentProps) {
-    const { location } = this.props;
-    if (prevProps.location.pathname === location.pathname && location.hash) {
-      return;
+  const { location } = props;
+
+  React.useEffect(() => {
+    const currentPath = location.pathname && location.hash;
+
+    if (prevLocationRef?.current) {
+      if (prevLocationRef.current === currentPath) {
+        return;
+      }
+
+      if (mainRef?.current) {
+        mainRef.current.focus();
+      }
+      window.scrollTo(0, 0);
     }
 
-    if (this.mainRef && this.mainRef.current) {
-      this.mainRef.current.focus();
-    }
-    window.scrollTo(0, 0);
-  }
+    prevLocationRef.current = currentPath;
+  }, [location]);
 
-  public render() {
-    return (
-      <main id="main" ref={this.mainRef} tabIndex={-1}>
-        <SiteRoutes />
-      </main>
-    );
-  }
-}
+  return (
+    <main id="main" ref={mainRef} tabIndex={-1}>
+      <SiteRoutes />
+    </main>
+  );
+};
+
+PageContent.propTypes = {};
+
+export default PageContent;
