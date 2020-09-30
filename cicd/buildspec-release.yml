@@ -5,6 +5,7 @@ env:
   variables:
     ENVS: "dev staging production"
     S3_ARCHIVE_BUCKET: "developer-portal-builds-s3-upload"
+    BUILD: "true"
   parameter-store:
     GITHUB_TOKEN: "/dvp/devops/va_bot_github_token"
     SLACK_WEBHOOK: "/dvp/devops/codebuild_slack_webhook"
@@ -17,6 +18,21 @@ phases:
       - echo "Generating release for ${COMMIT_HASH}" 
   build:
     commands:
+      # Check CI status of current commit hash
+      - ci_status=$(gh api /repos/department-of-veterans-affairs/developer-portal/commits/${COMMIT_HASH}/status | jq -r .state)
+      - echo ${ci_status}
+      - |
+        while [[ ${ci_status} == "pending" ]]; do
+          echo "CI still running -- sleep"
+          ci_status=$(gh api /repos/department-of-veterans-affairs/developer-portal/commits/${COMMIT_HASH}/status | jq -r .state)
+          echo ${ci_status}
+          sleep 10
+        done
+      - |
+        if [[ ${ci_status} ]] != "success" ]]; then
+          echo "CI failed release aborted"
+          exit 1
+        fi
       - mkdir -p release
       - aws s3 sync --no-progress s3://${S3_ARCHIVE_BUCKET}/cb-${COMMIT_HASH} release/.
       # Check that all files exist 
@@ -36,9 +52,13 @@ phases:
       - echo "Uploading artifacts"
       - |
         for env in ${ENVS}; do
-          gh release upload ${NEW_TAG} "release/${env}.tar.bz2#${env}"
+          gh release upload ${NEW_TAG} "release/${env}.tar.bz2#{NEW_TAG}_${env}.tar.bz2"
           echo "${env} artifact uploaded"
         done
+      # - | 
+      #   if [[ ${BUILD} == "true" ]]; then
+      #     aws codebuild start-build --project-name devportal-deploy --environment-variables-override name=ENVS,value=dev name=RELEASE,value=${NEW_TAG}
+      #   fi
   post_build:
     commands:
       # Post to Slack if failure.
