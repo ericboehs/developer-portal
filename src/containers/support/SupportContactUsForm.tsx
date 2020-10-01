@@ -32,6 +32,15 @@ interface SupportContactUsFormState {
   organization: IErrorableInput;
 }
 
+interface FormData {
+  apis: string[];
+  description: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  organization: string;
+}
+
 /**
  * STATE REDUCER
  */
@@ -103,7 +112,7 @@ const SupportContactUsForm = (props: SupportContactUsFormProps): JSX.Element => 
     );
   };
 
-  const processedData = (): any => ({
+  const processedData = (): FormData => ({
     apis: Object.keys(formState.apis).filter(k => formState.apis[k]),
     description: formState.description.value,
     email: formState.email.value,

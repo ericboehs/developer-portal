@@ -20,7 +20,7 @@ const server = setupServer(
 );
 
 /* eslint-disable  */
-//@ts-ignore
+// @ts-ignore
 const spyFetch = jest.spyOn(global, 'fetch');
 /* eslint-enable  */
 
