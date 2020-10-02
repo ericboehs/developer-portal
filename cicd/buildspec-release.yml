@@ -33,11 +33,13 @@ phases:
       - gh config set git_protocol ssh
       - COMMIT_HASH=${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - echo "Generating release for ${COMMIT_HASH}" 
+      - printenv
   build:
     commands:
       # Check CI status of current commit hash
       - ci_status=$(gh api /repos/department-of-veterans-affairs/developer-portal/commits/${COMMIT_HASH}/status | jq -r .state)
-      - echo "Commit status: ${ci_status}"
+      - |
+        echo "Commit status: ${ci_status}"
       - |
         while [[ ${ci_status} == "pending" ]]; do
           echo "CI still running -- sleep"
@@ -46,12 +48,12 @@ phases:
           sleep 10
         done
       - |
-        if [[ ${ci_status} ]] != "success" ]]; then
+        if [[ ${ci_status} != "success" ]]; then
           echo "CI failed release aborted. CI Status was ${ci_status}"
           exit 1
         fi
       - mkdir -p release
-      - aws s3 sync --no-progress s3://${S3_ARCHIVE_BUCKET}/cb-${COMMIT_HASH} release/.
+      - aws s3 sync --no-progress s3://${S3_ARCHIVE_BUCKET}/cb-${COMMIT_HASH:0:7} release/.
       # Check that all files exist 
       - | 
         for env in ${ENVS}; do
@@ -71,8 +73,8 @@ phases:
       # Upload artificats to release after adding version number to file.
       - |
         for env in ${ENVS}; do
-          mv "release/developer-portal-${env}.tar.bz2" "release/developer-portal-${env}-${RELEASE}.tar.bz2"
-          gh release upload ${NEW_TAG} "release/developer-portal-${env}-${RELEASE}.tar.bz2#{NEW_TAG}_${env}.tar.bz2"
+          mv "release/developer-portal-${env}.tar.bz2" "release/developer-portal-${env}-${VERSION}.tar.bz2"
+          gh release upload ${NEW_TAG} "release/developer-portal-${env}-${VERSION}.tar.bz2#${NEW_TAG}_${env}.tar.bz2"
           echo "${env} artifact uploaded"
         done
       # This is will kick off a a deployment to dev and staging deployments
@@ -85,7 +87,7 @@ phases:
     commands:
       # Post to Slack.
       - |
-        if [[ CODEBUILD_BUILD_SUCCEEDING -eq 0 ]]; then
+        if [[ ${CODEBUILD_BUILD_SUCCEEDING} -eq 0 ]]; then
           slackpost.sh "There was an error with the release process for ${CODEBUILD_BUILD_ID}."
         else
           slackpost.sh "Developer Portal release ${NEW_TAG} was successful."
