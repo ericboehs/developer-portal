@@ -12,20 +12,19 @@ const focusAndScroll = (elementToFocus: HTMLElement | null) => {
 
 const PageContent = (props: RouteComponentProps): JSX.Element => {
   const mainRef = React.useRef<HTMLElement>(null);
-  const prevLocationRef = React.useRef<string | null>(null);
 
   const { location } = props;
 
   React.useEffect(() => {
-    const currentPath = location.pathname && location.hash;
-    const prevLocation: string | null = prevLocationRef.current;
+    focusAndScroll(mainRef.current);
+  }, [location.pathname]);
 
-    if (prevLocation && prevLocation !== currentPath) {
+  React.useEffect(() => {
+    // If the hash was removed, then we want to scroll back to the top of the page
+    if (location.hash === '') {
       focusAndScroll(mainRef.current);
     }
-
-    prevLocationRef.current = currentPath;
-  }, [location]);
+  }, [location.hash]);
 
   return (
     <main id="main" ref={mainRef} tabIndex={-1}>
