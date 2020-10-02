@@ -55,8 +55,8 @@ phases:
       # Check that all files exist 
       - | 
         for env in ${ENVS}; do
-          if [[ ! -f release/${env}.tar.bz2 ]]; then
-            echo "${env}.tar.bz2 was not found. Aborting release process and sending notification to slack " >&2
+          if [[ ! -f release/developer-portal-${env}.tar.bz2 ]]; then
+            echo "developer-portal-${env}.tar.bz2 was not found. Aborting release process and sending notification to slack " >&2
             exit 1
           fi
         done
@@ -67,16 +67,19 @@ phases:
       - echo "Creating ${NEW_TAG} release"
       - gh release create ${NEW_TAG}
       - echo "Uploading artifacts"
+      - VERSION=${NEW_TAG#"cb-developer-portal/v"}
+      # Upload artificats to release after adding version number to file.
       - |
         for env in ${ENVS}; do
-          gh release upload ${NEW_TAG} "release/${env}.tar.bz2#{NEW_TAG}_${env}.tar.bz2"
+          mv "release/developer-portal-${env}.tar.bz2" "release/developer-portal-${env}-${RELEASE}.tar.bz2"
+          gh release upload ${NEW_TAG} "release/developer-portal-${env}-${RELEASE}.tar.bz2#{NEW_TAG}_${env}.tar.bz2"
           echo "${env} artifact uploaded"
         done
       # This is will kick off a a deployment to dev and staging deployments
       - | 
         if [[ ${DEPLOY} == "true" ]]; then
-          echo "Initiating build for ${NEW_TAG}
-          aws codebuild start-build --project-name developer-portal-deploy --environment-variables-override name=ENVS,value="dev staging" name=RELEASE,value=${NEW_TAG}
+          echo "Initiating build for ${NEW_TAG}"
+          aws codebuild start-build --project-name developer-portal-deploy --environment-variables-override name=RELEASE,value=${NEW_TAG}
         fi
   post_build:
     commands:
