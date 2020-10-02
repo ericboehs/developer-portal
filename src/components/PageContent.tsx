@@ -2,7 +2,7 @@ import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { SiteRoutes } from '../Routes';
 
-const focusAndScroll = (elementToFocus?: HTMLElement | null) => {
+const focusAndScroll = (elementToFocus: HTMLElement | null) => {
   if (elementToFocus) {
     elementToFocus.focus();
   }
@@ -21,7 +21,7 @@ const PageContent = (props: RouteComponentProps): JSX.Element => {
     const prevLocation: string | null = prevLocationRef.current;
 
     if (prevLocation && prevLocation !== currentPath) {
-      focusAndScroll(mainRef?.current);
+      focusAndScroll(mainRef.current);
     }
 
     prevLocationRef.current = currentPath;
