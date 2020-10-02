@@ -15,19 +15,19 @@ interface ISupportOverviewProps {
   readonly sections: ISection[];
 }
 
-export default function SupportOverview(props: ISupportOverviewProps) {
-  return (
-    <section role="region" aria-labelledby={PAGE_HEADER_ID}>
-      <PageHeader {...headerProps} />
-      <div className={defaultFlexContainer()}>
-        {props.sections.map((section: ISection) => {
-          return (
-            <CardLink name={section.name} url={`/support/${section.id}`} key={section.id}>
-              {section.description}
-            </CardLink>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
+const SupportOverview: React.FunctionComponent<ISupportOverviewProps> = (
+  props: ISupportOverviewProps,
+): JSX.Element => (
+  <section role="region" aria-labelledby={PAGE_HEADER_ID}>
+    <PageHeader {...headerProps} />
+    <div className={defaultFlexContainer()}>
+      {props.sections.map((section: ISection) => (
+        <CardLink name={section.name} url={`/support/${section.id}`} key={section.id}>
+          {section.description}
+        </CardLink>
+      ))}
+    </div>
+  </section>
+);
+
+export default SupportOverview;
