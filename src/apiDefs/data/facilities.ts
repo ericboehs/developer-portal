@@ -1,10 +1,16 @@
 import { FacilitiesReleaseNotes } from '../../content/apiDocs/facilities';
 import { IApiDescription } from '../schema';
 
-const swaggerHost : string = process.env.REACT_APP_VETSGOV_SWAGGER_API!;
-const facilitiesApis : IApiDescription[] = [
+if (!process.env.REACT_APP_VETSGOV_SWAGGER_API) {
+  throw new Error(
+    'Developer portal environment is missing config var REACT_APP_VETSGOV_SWAGGER_API',
+  );
+}
+
+const swaggerHost: string = process.env.REACT_APP_VETSGOV_SWAGGER_API;
+const facilitiesApis: IApiDescription[] = [
   {
-    description: "VA Facilities",
+    description: 'VA Facilities',
     docSources: [
       {
         openApiUrl: `${swaggerHost}/services/va_facilities/docs/v0/api`,

@@ -5,7 +5,13 @@ import {
 } from '../../content/apiDocs/verification';
 import { IApiDescription } from '../schema';
 
-const swaggerHost: string = process.env.REACT_APP_VETSGOV_SWAGGER_API!;
+if (!process.env.REACT_APP_VETSGOV_SWAGGER_API) {
+  throw new Error(
+    'Developer portal environment is missing config var REACT_APP_VETSGOV_SWAGGER_API',
+  );
+}
+
+const swaggerHost: string = process.env.REACT_APP_VETSGOV_SWAGGER_API;
 const verificationApis: IApiDescription[] = [
   {
     description: 'Provides methods to standardize and validate addresses.',
@@ -23,7 +29,7 @@ const verificationApis: IApiDescription[] = [
     vaInternalOnly: true,
   },
   {
-    description: "Confirm Veteran status for a given person with an api key.",
+    description: 'Confirm Veteran status for a given person with an api key.',
     docSources: [
       {
         openApiUrl: `${swaggerHost}/services/veteran_confirmation/docs/v0/api`,
@@ -37,7 +43,8 @@ const verificationApis: IApiDescription[] = [
     vaInternalOnly: false,
   },
   {
-    description: "Confirm Veteran status for a given person, or get a Veteran’s service history or disability rating.",
+    description:
+      'Confirm Veteran status for a given person, or get a Veteran’s service history or disability rating.',
     docSources: [
       {
         openApiUrl: `${swaggerHost}/services/veteran_verification/docs/v0/veteran_verification`,
