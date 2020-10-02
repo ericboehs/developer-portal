@@ -1,11 +1,28 @@
-# This release file uses the new git hub cli tool called gh to automate release and artifact uploade.
-# Learn more here; https://github.com/cli/cli
+######################################################################
+#  Developer Portal CodeBuild Release
+#  
+#
+# Tool Links:
+#  - CodeBuild - https://docs.aws.amazon.com/codebuild/index.html
+#  - CodeBuild Environmental Variables - https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
+#  - CodeBuild Enironment Image - ECS deployer - https://github.com/department-of-veterans-affairs/lighthouse-codebuild-containers/tree/main/ecs-deployer
+#  - AWS CLI 2.0 - https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html
+#  - Git Hub CLI - https://github.com/cli/cli
+# 
+# All Custom scripts are on the CodeBuild Environment container. 
+# https://github.com/department-of-veterans-affairs/lighthouse-codebuild-containers/tree/main/
+#
+# Custom Scripts:
+#  - slackpost.sh
+#
+####################################################################### 
+
 version: 0.2
 env:
   variables:
     ENVS: "dev staging production"
     S3_ARCHIVE_BUCKET: "developer-portal-builds-s3-upload"
-    BUILD: "true"
+    DEPLOY: "true"
   parameter-store:
     GITHUB_TOKEN: "/dvp/devops/va_bot_github_token"
     SLACK_WEBHOOK: "/dvp/devops/codebuild_slack_webhook"
@@ -20,17 +37,17 @@ phases:
     commands:
       # Check CI status of current commit hash
       - ci_status=$(gh api /repos/department-of-veterans-affairs/developer-portal/commits/${COMMIT_HASH}/status | jq -r .state)
-      - echo ${ci_status}
+      - echo "Commit status: ${ci_status}"
       - |
         while [[ ${ci_status} == "pending" ]]; do
           echo "CI still running -- sleep"
           ci_status=$(gh api /repos/department-of-veterans-affairs/developer-portal/commits/${COMMIT_HASH}/status | jq -r .state)
-          echo ${ci_status}
+          echo "Commit status: ${ci_status}"
           sleep 10
         done
       - |
         if [[ ${ci_status} ]] != "success" ]]; then
-          echo "CI failed release aborted"
+          echo "CI failed release aborted. CI Status was ${ci_status}"
           exit 1
         fi
       - mkdir -p release
@@ -55,13 +72,18 @@ phases:
           gh release upload ${NEW_TAG} "release/${env}.tar.bz2#{NEW_TAG}_${env}.tar.bz2"
           echo "${env} artifact uploaded"
         done
-      # - | 
-      #   if [[ ${BUILD} == "true" ]]; then
-      #     aws codebuild start-build --project-name devportal-deploy --environment-variables-override name=ENVS,value=dev name=RELEASE,value=${NEW_TAG}
-      #   fi
+      # This is will kick off a a deployment to dev and staging deployments
+      - | 
+        if [[ ${DEPLOY} == "true" ]]; then
+          echo "Initiating build for ${NEW_TAG}
+          aws codebuild start-build --project-name developer-portal-deploy --environment-variables-override name=ENVS,value="dev staging" name=RELEASE,value=${NEW_TAG}
+        fi
   post_build:
     commands:
-      # Post to Slack if failure.
-      if [[ CODEBUILD_BUILD_SUCCEEDING -eq 0 ]]; then
-        slackpost.sh "There was an error with the release process for ${CODEBUILD_BUILD_ID}."
-      fi
+      # Post to Slack.
+      - |
+        if [[ CODEBUILD_BUILD_SUCCEEDING -eq 0 ]]; then
+          slackpost.sh "There was an error with the release process for ${CODEBUILD_BUILD_ID}."
+        else
+          slackpost.sh "Developer Portal release ${NEW_TAG} was successful."
+        fi
