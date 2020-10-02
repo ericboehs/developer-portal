@@ -14,35 +14,31 @@
 */
 
 import apiDefs, { apiCategoryOrder } from './data/categories';
-import { IApiCategory, IApiDescription } from './schema';
+import { IApiCategories, IApiCategory, IApiDescription } from './schema';
 
-const getApiDefinitions = () => apiDefs;
-const getApiCategoryOrder = () => apiCategoryOrder;
+const getApiDefinitions = (): IApiCategories => apiDefs;
+const getApiCategoryOrder = (): string[] => apiCategoryOrder;
 
-const getAllApis = (): IApiDescription[] => {
-  return Object.values(getApiDefinitions()).flatMap((category: IApiCategory) => category.apis);
-};
+const getAllApis = (): IApiDescription[] =>
+  Object.values(getApiDefinitions()).flatMap((category: IApiCategory) => category.apis);
 
-function lookupApiByFragment(apiKey: string): IApiDescription | null {
+const lookupApiByFragment = (apiKey: string): IApiDescription | null => {
   const hasMatchingIdentifier = (apiDesc: IApiDescription): boolean =>
     apiDesc.urlFragment === apiKey;
   const apiResult = getAllApis().find(hasMatchingIdentifier);
   return apiResult || null;
-}
+};
 
-function lookupApiCategory(categoryKey: string): IApiCategory | null {
-  return apiDefs[categoryKey] || null;
-}
+const lookupApiCategory = (categoryKey: string): IApiCategory | null =>
+  apiDefs[categoryKey] || null;
 
-function apisFor(apiList: string[]): IApiDescription[] {
+const apisFor = (apiList: string[]): IApiDescription[] => {
   const allApis = getAllApis();
   const searchedApiSet = new Set<string>(apiList);
   return allApis.filter((api: IApiDescription) => searchedApiSet.has(api.urlFragment));
-}
+};
 
-function includesOauthAPI(apiList: string[]): boolean {
-  return apisFor(apiList).some(api => !!api.oAuth);
-}
+const includesOAuthAPI = (apiList: string[]): boolean => apisFor(apiList).some(api => !!api.oAuth);
 
 export {
   getAllApis,
@@ -50,5 +46,5 @@ export {
   getApiDefinitions,
   lookupApiByFragment,
   lookupApiCategory,
-  includesOauthAPI,
+  includesOAuthAPI,
 };
