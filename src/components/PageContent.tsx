@@ -23,7 +23,9 @@ const PageContent = (props: RouteComponentProps): JSX.Element => {
       return;
     }
 
-    focusAndScroll(mainRef.current);
+    if (prevLocationRef.current) {
+      focusAndScroll(mainRef.current);
+    }
     prevLocationRef.current = location.pathname;
   }, [location]);
 
