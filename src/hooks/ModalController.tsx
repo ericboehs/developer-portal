@@ -6,6 +6,8 @@ const useModalController = (): {
 } => {
 
   const [modalVisible, setModalVisibleState] = React.useState(false);
+  // We're using a mutable ref here so that we can use it within the effect without
+  // the chance of our state being out of sync
   const modalVisibleRef = React.useRef<boolean>(false);
   
   const setModalVisible = (visible: boolean) => {
@@ -16,7 +18,6 @@ const useModalController = (): {
   React.useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && modalVisibleRef.current) {
-        // use modal visible ref so we don't need to declare it as a dependency
         setModalVisible(false);
       }
     };
