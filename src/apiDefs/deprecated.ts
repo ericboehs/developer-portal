@@ -18,19 +18,17 @@ export const isApiDeactivated = (api: IApiDescription): boolean => {
   return moment().isAfter(api.deactivationInfo.deactivationDate);
 };
 
-export const getDeprecatedFlags = () => {
-  return getAllApis().reduce((flags: {}, api: IApiDescription) => {
+export const getDeprecatedFlags = (): { [apiId: string]: boolean } =>
+  getAllApis().reduce((flags: { [apiId: string]: boolean }, api: IApiDescription) => {
     flags[api.urlFragment] = isApiDeprecated(api);
     return flags;
   }, {});
-};
 
-export const getDeactivatedFlags = () => {
-  return getAllApis().reduce((flags: {}, api: IApiDescription) => {
+export const getDeactivatedFlags = (): { [apiId: string]: boolean } =>
+  getAllApis().reduce((flags: { [apiId: string]: boolean }, api: IApiDescription) => {
     flags[api.urlFragment] = isApiDeactivated(api);
     return flags;
   }, {});
-};
 
 // returns a synthetic "category" of deactivated APIs
 export const getDeactivatedCategory = (): BaseAPICategory => ({
