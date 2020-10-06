@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 import classNames from 'classnames';
-import { Location } from 'history';
-import { match } from 'react-router';
+import { Location, LocationDescriptor } from 'history';
+import { match as Match } from 'react-router';
 import { HashLink, NavHashLink, NavHashLinkProps } from 'react-router-hash-link';
 import * as Stickyfill from 'stickyfilljs';
 
@@ -27,25 +27,27 @@ export class SideNavEntry extends React.Component<ISideNavEntryProps> {
   // used by react-router only takes into account the path, and by default will
   // include partial matches according to the https://github.com/pillarjs/path-to-regexp
   // implementation.
-  // `navHashLinkIsActive` is both more and less strict than the default implementation:
-  // there are cases where the original would return false and this function returns true,
-  // and vice versa.
-  public navHashLinkIsActive = (pathMatch: match, location: Location): boolean => {
+  public navHashLinkIsActive = (pathMatch: Match | null, location: Location): boolean => {
     const withoutTrailingSlash = (path: string) => {
       return path.replace(/\/$/, '');
     };
 
     let pathname: string;
     let hash: string;
-    if (typeof this.props.to === 'string') {
-      const url = new URL(this.props.to, 'http://example.com');
+    let to: LocationDescriptor =
+      typeof this.props.to === 'function' ? this.props.to(location) : this.props.to;
+
+    if (typeof to === 'string') {
+      const url = new URL(to, 'http://example.com');
       pathname = url.pathname;
       hash = url.hash;
     } else {
-      pathname = this.props.to.pathname || '';
-      hash = this.props.to.hash || '';
+      // object
+      pathname = to.pathname || '';
+      hash = to.hash || '';
     }
-    const to = withoutTrailingSlash(pathname) + hash;
+
+    to = withoutTrailingSlash(pathname) + hash;
     const currentPath = withoutTrailingSlash(location.pathname);
 
     // If the location with hash exactly matches our navlink's `to` then
@@ -54,13 +56,12 @@ export class SideNavEntry extends React.Component<ISideNavEntryProps> {
       return true;
     }
 
-    // Handle two cases: a path match where the hashes match, or when the hashes
-    // match and `to` doesn't have a path
-    if ((pathMatch || to.startsWith('#')) && location.hash && hash === location.hash) {
+    // If the `to` location starts with "#", it's an in-page anchor link, so only the hash matters
+    if (to.startsWith('#') && location.hash && hash === location.hash) {
       return true;
     }
     // Fall back to the native implementation which does partial matching
-    if (!this.props.exact) {
+    if (!this.props.exact && !hash) {
       return !!pathMatch;
     }
     return false;

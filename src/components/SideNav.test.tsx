@@ -1,4 +1,6 @@
-import { render } from 'enzyme';
+// import { render } from 'enzyme';
+import '@testing-library/jest-dom/extend-expect';
+import { render, screen } from '@testing-library/react';
 import 'jest';
 import * as React from 'react';
 
@@ -12,19 +14,21 @@ function testActive({
   exact = false,
   expectation,
 }: {
-  location: LocationDescriptor<any>;
-  to: string;
+  location: LocationDescriptor;
+  to: LocationDescriptor;
   exact?: boolean;
   expectation: boolean;
 }) {
   const activeClassName = 'va-api-active-sidenav-link';
-  const wrapper = render(
+  render(
     <MemoryRouter initialEntries={[location]}>
-      <SideNavEntry name="" to={to} exact={exact} />
+      <SideNavEntry name="Go to Fake Page" to={to} exact={exact} />
     </MemoryRouter>,
   );
 
-  expect(wrapper.find('a').hasClass(activeClassName)).toBe(expectation);
+  const navLink = screen.getByRole('link', { name: 'Go to Fake Page' });
+  expect(navLink).toBeInTheDocument();
+  expect(navLink.className.includes(activeClassName)).toBe(expectation);
 }
 
 describe('SideNavEntry isActive matching', () => {
