@@ -6,7 +6,7 @@ import { Location } from 'history';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as actions from '../../actions';
-import { IApiDescription } from '../../apiDefs/schema';
+import { IApiDescription, IApiDocSource } from '../../apiDefs/schema';
 
 import { history } from '../../store';
 
@@ -53,6 +53,43 @@ const ApiDocumentation = (props: IApiDocumentationProps): JSX.Element => {
    * Tab Index
    */
   const [tabIndex, setTabIndex] = React.useState(0);
+
+  const getTabIndexFromQueryParams = React.useCallback((): number => {
+    if (location.search) {
+      const params = new URLSearchParams(history.location.search);
+  
+      const hasKey = (source: IApiDocSource) => !!source.key;
+      const tabKeys = apiDefinition.docSources
+        .filter(hasKey)
+        .map(source => source.key?.toLowerCase());
+      const tabQuery = params.get('tab');
+      const fromFragment = tabQuery ? tabQuery.toLowerCase() : '';
+      const sourceTabIndex = tabKeys.findIndex(sourceKey => sourceKey === fromFragment);
+      return sourceTabIndex === -1 ? tabIndex : sourceTabIndex;
+    }
+  
+    return tabIndex;
+  }, [location.search, apiDefinition.docSources, tabIndex]);
+
+  const setTabIndexFromQueryParams = React.useCallback((): void => {
+    if (apiDefinition.docSources.length > 1) {
+      const newTabIndex = getTabIndexFromQueryParams();
+      setTabIndex(newTabIndex);
+    }
+  }, [apiDefinition, getTabIndexFromQueryParams]);
+
+  React.useEffect(() => {
+    setTabIndexFromQueryParams();
+  }, [setTabIndexFromQueryParams]);
+
+  React.useEffect(() => {
+    if (
+      location.pathname !== prevLocation?.pathname ||
+      location.search !== prevLocation?.search
+    ) {
+      setTabIndexFromQueryParams();
+    }
+  }, [location.pathname, location.search, setTabIndexFromQueryParams, prevLocation]);
 
   const onTabSelect = (selectedTabIndex: number) => {
     const tab = props.apiDefinition.docSources[selectedTabIndex].key;
