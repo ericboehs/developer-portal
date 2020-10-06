@@ -31,16 +31,16 @@ const ApiDocumentation = (props: IApiDocumentationProps): JSX.Element => {
    */
   const dispatch = useDispatch();
 
-  const setApiVersionFromQueryParams = React.useCallback(() => {  
+  const setApiVersionFromQueryParams = React.useCallback((): void => {  
     const params = new URLSearchParams(location.search);
     dispatch(actions.setRequstedApiVersion(params.get('version')));
   }, [dispatch, location.search]);
 
-  React.useEffect(() => {
+  React.useEffect((): void => {
     setApiVersionFromQueryParams();
   }, [setApiVersionFromQueryParams]);
 
-  React.useEffect(() => {
+  React.useEffect((): void => {
     if (
       location.pathname !== prevLocation?.pathname ||
       location.search !== prevLocation?.search
@@ -78,11 +78,11 @@ const ApiDocumentation = (props: IApiDocumentationProps): JSX.Element => {
     }
   }, [apiDefinition, getTabIndexFromQueryParams]);
 
-  React.useEffect(() => {
+  React.useEffect((): void => {
     setTabIndexFromQueryParams();
   }, [setTabIndexFromQueryParams]);
 
-  React.useEffect(() => {
+  React.useEffect((): void => {
     if (
       location.pathname !== prevLocation?.pathname ||
       location.search !== prevLocation?.search
@@ -91,7 +91,7 @@ const ApiDocumentation = (props: IApiDocumentationProps): JSX.Element => {
     }
   }, [location.pathname, location.search, setTabIndexFromQueryParams, prevLocation]);
 
-  const onTabSelect = (selectedTabIndex: number) => {
+  const onTabSelect = (selectedTabIndex: number): void => {
     const tab = props.apiDefinition.docSources[selectedTabIndex].key;
     const params = new URLSearchParams(history.location.search);
     if (tab) {
