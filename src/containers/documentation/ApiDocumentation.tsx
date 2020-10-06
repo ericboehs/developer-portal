@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { useDispatch } from 'react-redux';
 
+import * as PropTypes from 'prop-types';
+
 import { Flag } from 'flag';
 import { Location } from 'history';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as actions from '../../actions';
-import { IApiDescription, IApiDocSource } from '../../apiDefs/schema';
+import { ApiDescriptionPropType, IApiDescription, IApiDocSource } from '../../apiDefs/schema';
 
 import { history } from '../../store';
 
@@ -16,38 +18,22 @@ import SwaggerDocs from './SwaggerDocs';
 
 import '../../../node_modules/react-tabs/style/react-tabs.scss';
 
-interface IApiDocumentationProps {
+interface ApiDocumentationProps {
   apiDefinition: IApiDescription;
   categoryKey: string;
   location: Location;
 }
 
-const ApiDocumentation = (props: IApiDocumentationProps): JSX.Element => {
+const ApiDocumentationPropTypes = {
+  apiDefinition: ApiDescriptionPropType.isRequired,
+  categoryKey: PropTypes.string.isRequired,
+  // Leave as any for now until we can use the location react hooks
+  location: PropTypes.any.isRequired,
+};
+
+const ApiDocumentation = (props: ApiDocumentationProps): JSX.Element => {
   const { apiDefinition, location } = props;
   const prevLocation = usePrevious(location);
-
-  /*
-   * API Version
-   */
-  const dispatch = useDispatch();
-
-  const setApiVersionFromQueryParams = React.useCallback((): void => {  
-    const params = new URLSearchParams(location.search);
-    dispatch(actions.setRequstedApiVersion(params.get('version')));
-  }, [dispatch, location.search]);
-
-  React.useEffect((): void => {
-    setApiVersionFromQueryParams();
-  }, [setApiVersionFromQueryParams]);
-
-  React.useEffect((): void => {
-    if (
-      location.pathname !== prevLocation?.pathname ||
-      location.search !== prevLocation?.search
-    ) {
-      setApiVersionFromQueryParams();
-    }
-  }, [location.pathname, location.search, setApiVersionFromQueryParams, prevLocation]);
 
   /*
    * Tab Index
@@ -102,6 +88,29 @@ const ApiDocumentation = (props: IApiDocumentationProps): JSX.Element => {
   };
 
   /*
+   * API Version
+   */
+  const dispatch = useDispatch();
+
+  const setApiVersionFromQueryParams = React.useCallback((): void => {  
+    const params = new URLSearchParams(location.search ?? undefined);
+    dispatch(actions.setRequstedApiVersion(params.get('version')));
+  }, [dispatch, location.search]);
+
+  React.useEffect((): void => {
+    setApiVersionFromQueryParams();
+  }, [setApiVersionFromQueryParams]);
+
+  React.useEffect((): void => {
+    if (
+      location.pathname !== prevLocation?.pathname ||
+      location.search !== prevLocation?.search
+    ) {
+      setApiVersionFromQueryParams();
+    }
+  }, [location.pathname, location.search, setApiVersionFromQueryParams, prevLocation]);
+
+  /*
    * RENDER
    */
   return (
@@ -131,5 +140,7 @@ const ApiDocumentation = (props: IApiDocumentationProps): JSX.Element => {
     </Flag>
   );
 };
+
+ApiDocumentation.propTypes = ApiDocumentationPropTypes;
 
 export default ApiDocumentation;
