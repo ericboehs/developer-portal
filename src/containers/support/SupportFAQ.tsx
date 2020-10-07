@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import GroupedAccordions, { IPanelContent } from '../../components/GroupedAccordions';
+import { GroupedAccordions, PanelContent } from '../../components';
 import PageHeader from '../../components/PageHeader';
 
 const generalQuestions: ISupportQuestion[] = [
@@ -138,7 +138,7 @@ interface ISupportQuestion {
 }
 
 const SupportQuestions = (props: ISupportQuestionsProps) => {
-  const content: IPanelContent[] = props.questions.map((q: ISupportQuestion) => (
+  const content: PanelContent[] = props.questions.map((q: ISupportQuestion) => (
     {
       body: q.answer,
       title: q.question,
