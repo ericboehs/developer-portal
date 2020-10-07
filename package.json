@@ -52,7 +52,7 @@
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-router-hash-link": "^2.1.0",
-    "react-router-sitemap": "git+https://github.com/nfasulo/react-router-sitemap.git#6060031e64211392e2070da260e45b29972bd194",
+    "react-router-sitemap": "git+https://github.com/nfasulo/react-router-sitemap.git",
     "react-scroll": "^1.7.16",
     "react-tabs": "^3.0.0",
     "redux": "4.0.0",
