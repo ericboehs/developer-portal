@@ -64,9 +64,11 @@ const initialFormState = {
   organization: defaultErrorableField(),
 };
 
+type actionValue = { [x: string]: boolean } | IErrorableInput;
+
 const reducer = (
   state: SupportContactUsFormState,
-  action: { type: string; value: any },
+  action: { type: string; value: actionValue },
 ): SupportContactUsFormState => {
   switch (action.type) {
     case 'SET_APIS':
