@@ -13,12 +13,14 @@ export interface ISideNavEntryProps extends NavHashLinkProps {
   name: string | JSX.Element;
   className?: string;
   subNavLevel: number;
+  sharedAnchors: string[];
 }
 
 // Constructs a NavHashLink in the sidebar that also takes into account the
 // hash when determining if it's active
 export class SideNavEntry extends React.Component<ISideNavEntryProps> {
   public static defaultProps = {
+    sharedAnchors: ['#main', '#page-header'],
     subNavLevel: 0,
   };
 
@@ -48,28 +50,28 @@ export class SideNavEntry extends React.Component<ISideNavEntryProps> {
     }
 
     to = withoutTrailingSlash(pathname) + hash;
-    const currentPath = withoutTrailingSlash(location.pathname);
-
-    // If the location with hash exactly matches our navlink's `to` then
-    // we can return true, regardless of the `exact` prop
-    if (to === `${currentPath}${location.hash}`) {
-      return true;
-    }
-
-    // If the `to` location starts with "#", it's an in-page anchor link, so only the hash matters
-    if (to.startsWith('#') && location.hash && hash === location.hash) {
-      return true;
-    }
-    // Fall back to the native implementation which does partial matching
-    if (!this.props.exact && !hash) {
+    if (to.startsWith('#')) {
+      // for an in-page anchor link, check that the link's destination is the same as the current hash
+      return to === location.hash;
+    } else if (hash) {
+      // exact path match + exact hash match = exact match overall. nav links with a hash require 
+      // both regardless of props.exact because partial path matches aren't applicable.
+      return !!pathMatch?.isExact && hash === location.hash;
+    } else if (this.props.exact) {
+      // allow "exact" matches for some anchors that are shared across the site if the nav link
+      // does not include a hash.
+      const hashMatch: boolean = !location.hash || this.props.sharedAnchors.includes(location.hash);
+      return !!pathMatch && hashMatch;
+    } else {
+      // default partial matching. since the nav link doesn't have a hash, partial matching 
+      // works whether or not the location has a hash.
       return !!pathMatch;
     }
-    return false;
-  }; // tslint:disable-line: semicolon
+  };
 
   public render() {
     // Omit unneeded parent props from NavLink
-    const { name, className, subNavLevel, ...navLinkProps } = this.props;
+    const { name, className, subNavLevel, sharedAnchors, ...navLinkProps } = this.props;
 
     return (
       <li
