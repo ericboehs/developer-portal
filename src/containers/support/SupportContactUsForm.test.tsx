@@ -26,7 +26,7 @@ const server = setupServer(
 // @ts-ignore
 const spyFetch = jest.spyOn(global, 'fetch');
 /* eslint-enable  */
-/*
+
 describe('SupportContactUsForm', () => {
   beforeAll(() => server.listen());
   beforeEach(() => server.resetHandlers());
@@ -182,4 +182,3 @@ describe('SupportContactUsForm', () => {
     );
   });
 });
-
