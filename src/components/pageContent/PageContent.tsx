@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
-import { SiteRoutes } from '../Routes';
+import { SiteRoutes } from '../../Routes';
 
 const focusAndScroll = (elementToFocus: HTMLElement | null) => {
   if (elementToFocus) {
@@ -34,4 +34,4 @@ const PageContent = (props: RouteComponentProps): JSX.Element => {
 
 PageContent.propTypes = {};
 
-export default PageContent;
+export { PageContent };
