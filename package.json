@@ -131,7 +131,7 @@
     "jest-junit-reporter": "^1.1.0",
     "jest-puppeteer": "^4.4.0",
     "js-yaml-loader": "^1.2.2",
-    "jsdom": "^15.2.1",
+    "jsdom": "^16.4.0",
     "lodash.noop": "^3.0.1",
     "markdown-component-loader": "github:adhocteam/markdown-component-loader#dv-3146-from110",
     "markdown-it-anchor": "^5.0.2",
