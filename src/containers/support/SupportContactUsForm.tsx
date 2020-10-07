@@ -1,6 +1,7 @@
 import ErrorableCheckboxGroup from '@department-of-veterans-affairs/formation-react/ErrorableCheckboxGroup';
 import ErrorableTextArea from '@department-of-veterans-affairs/formation-react/ErrorableTextArea';
 import ErrorableTextInput from '@department-of-veterans-affairs/formation-react/ErrorableTextInput';
+import * as Sentry from '@sentry/browser';
 import classNames from 'classnames';
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
@@ -123,7 +124,7 @@ const SupportContactUsForm = (props: SupportContactUsFormProps): JSX.Element => 
     organization: formState.organization.value,
   });
 
-  const formSubmission = async () => {
+  const formSubmission = () => {
     const request = new Request(CONTACT_US_URL, {
       body: JSON.stringify(processedData()),
       headers: {
@@ -133,10 +134,26 @@ const SupportContactUsForm = (props: SupportContactUsFormProps): JSX.Element => 
       method: 'POST',
     });
 
-    const response = await fetch(request);
-    if (!response.ok) {
-      throw Error(response.statusText);
-    }
+    return fetch(request)
+      .then(response => {
+        // The developer-portal-backend sends a 400 status, along with an array of validation error strings, when validation errors are present on the form.
+        if (!response.ok && response.status !== 400) {
+          throw Error(response.statusText);
+        }
+        return response;
+      })
+      .then(response => response.json())
+      .then(json => {
+        if (json.errors) {
+          throw Error(`Contact Us Form validation errors: ${json.errors.join(', ')}`);
+        }
+      })
+      .catch(error => {
+        Sentry.withScope(scope => {
+          scope.setLevel(Sentry.Severity.fromString('warning'));
+          Sentry.captureException(error);
+        });
+      });
   };
 
   const toggleApis = (input: IErrorableInput, checked: boolean) => {
